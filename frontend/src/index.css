@@ -1,31 +1,37 @@
+/* Load Google Font */
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap');
 
+/* Load Tailwind */
 @import "tailwindcss";
 
+/* Custom dark variant (Tailwind v4 syntax) */
 @custom-variant dark (&:where(.dark, .dark *));
 
-*{
+/* Custom theme values */
+@theme{
+  --color-primary: #E6CCFF;
+}
+
+/* Global font */
+* {
   font-family: "Outfit", sans-serif;
 }
 
-@theme{
-  --color-primary: #E6CCFF
+/* Hide scrollbar */
+::-webkit-scrollbar {
+  display: none;
 }
 
-::-webkit-scrollbar{
-  display:none;
+/* Reset utility */
+.reset-tw :not(pre):not(code) {
+  all: revert;
 }
 
-.reset-tw :not(pre):not(code){
-  all:revert
-}
-
-.loader div :nth-child(2){
+/* Loader animation delays */
+.loader div :nth-child(2) {
   animation-delay: 0.2s;
-
 }
 
-.loader div :nth-child(3){
+.loader div :nth-child(3) {
   animation-delay: 0.4s;
-
 }
