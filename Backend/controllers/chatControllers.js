@@ -39,17 +39,31 @@ export const getChat = async (req, res) =>{
 }
 
 //Api controller for deleting chat
-export const deleteChat = async (req, res) =>{
-    try{
-        const userId = req.user._id
-        const {chatId} = req.body
+export const deleteChat = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const chatId = req.params.id; // ✅ FIX
 
-        await Chat.deleteOne({_id: chatId, userId})
+    const deletedChat = await Chat.deleteOne({
+      _id: chatId,
+      userId,
+    });
 
-        res.json({success: true, message:"Chat Deleted"})
-        
-
-    }catch (error){
-        res.json({success:false, message:error.message})
+    if (deletedChat.deletedCount === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Chat not found or not authorized",
+      });
     }
-}
+
+    res.status(200).json({
+      success: true,
+      message: "Chat deleted successfully",
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
