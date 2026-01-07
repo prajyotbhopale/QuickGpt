@@ -2,34 +2,16 @@ import axios from "axios"
 import Chat from "../models/Chat.js"
 import User from "../models/User.js"
 import imagekit from "../configs/imageKit.js"
-// import openai from '../configs/openai.js'
-// import { geminiModel } from "../configs/gemini.js";
-
-//Text-based AI chat Messages Controller
-
-// ✅ Gemini REST endpoint (STABLE)
-const GEMINI_URL =
-  "https://generativelanguage.googleapis.com/v1/models/gemini-1.0-pro:generateContent";
+import { callGemini } from "../configs/gemini.js";
 
 
 
-// ===============================
-// TEXT MESSAGE CONTROLLER
-// ===============================
 export const textMessageController = async (req, res) => {
   try {
-    const userId = req.user._id;
-    const { chatId, prompt } = req.body;
+    const { prompt } = req.body;
 
-    // 1️⃣ Credit check
-    if (req.user.credits < 1) {
-      return res.status(403).json({
-        success: false,
-        message: "You don't have enough credits",
-      });
-    }
 
-    // 2️⃣ Prompt validation
+    // ✅ Proper validation
     if (!prompt || !prompt.trim()) {
       return res.status(400).json({
         success: false,
@@ -37,44 +19,10 @@ export const textMessageController = async (req, res) => {
       });
     }
 
-    // 3️⃣ Chat ownership check
-    const chat = await Chat.findOne({ userId, _id: chatId });
-    if (!chat) {
-      return res.status(404).json({
-        success: false,
-        message: "Chat not found",
-      });
-    }
+    // ✅ Call Gemini (returns STRING)
+    const aiText = await callGemini(prompt);
 
-    // 4️⃣ Save user message
-    chat.messages.push({
-      role: "user",
-      content: prompt,
-      timestamp: Date.now(),
-      isImage: false,
-    });
-
-    // 5️⃣ 🔥 GEMINI REST API CALL (WORKING)
-    const response = await axios.post(
-      `${GEMINI_URL}?key=${process.env.GEMINI_API_KEY}`,
-      {
-        contents: [
-          {
-            role: "user",
-            parts: [{ text: prompt }],
-          },
-        ],
-      }
-    );
-
-    const aiText =
-      response.data?.candidates?.[0]?.content?.parts?.[0]?.text;
-
-    if (!aiText) {
-      throw new Error("No response from Gemini");
-    }
-
-    // 6️⃣ Save AI reply
+    // ✅ Convert STRING → MESSAGE OBJECT
     const reply = {
       role: "assistant",
       content: aiText,
@@ -82,25 +30,13 @@ export const textMessageController = async (req, res) => {
       isImage: false,
     };
 
-    chat.messages.push(reply);
-    await chat.save();
-
-    // 7️⃣ Deduct credit
-    await User.updateOne(
-      { _id: userId },
-      { $inc: { credits: -1 } }
-    );
-
-    // 8️⃣ Send response
+    // ✅ Send correct shape
     return res.status(200).json({
       success: true,
       reply,
     });
   } catch (error) {
-    console.error(
-      "TEXT MESSAGE ERROR (GEMINI):",
-      error.response?.data || error.message
-    );
+    console.error("Gemini Error:", error.message);
 
     return res.status(500).json({
       success: false,
@@ -108,6 +44,7 @@ export const textMessageController = async (req, res) => {
     });
   }
 };
+
 //Image Generation Message Controller
 
 export const imageMessageController = async (req, res) => {
