@@ -5,8 +5,7 @@ import Message from "./Message";
 import toast from "react-hot-toast";
 
 const ChatBox = () => {
-  const { selectedChat, theme, user, axios, token, setUser } =
-    useAppContext();
+  const { selectedChat, theme, user, axios, token, setUser } = useAppContext();
 
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -54,33 +53,36 @@ const ChatBox = () => {
       );
 
       if (data.success) {
-        setMessages((prev) => [...prev, data.reply]);
+        setMessages((prev) => {
+          const updated = [...prev, data.reply];
+          return updated;
+        });
 
         setUser((prev) => ({
           ...prev,
-          credits:
-            mode === "image"
-              ? prev.credits - 2
-              : prev.credits - 1,
+          credits: mode === "image" ? prev.credits - 2 : prev.credits - 1,
         }));
       } else {
         toast.error(data.message);
         setPrompt(promptCopy);
       }
     } catch (error) {
-      toast.error(
-        error.response?.data?.message || error.message
-      );
+      toast.error(error.response?.data?.message || error.message);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    if (selectedChat) {
+    if (selectedChat?._id) {
+      console.log(
+        "🔄 Loading messages for chat:",
+        selectedChat._id,
+        selectedChat.messages
+      );
       setMessages(selectedChat.messages || []);
     }
-  }, [selectedChat]);
+  }, [selectedChat?._id]);
 
   useEffect(() => {
     if (containerRef.current) {
@@ -94,18 +96,11 @@ const ChatBox = () => {
   return (
     <div className="flex-1 flex flex-col justify-between m-5 md:m-10 xl:mx-30 max-md:mt-14 2xl:pr-40">
       {/* chat messages */}
-      <div
-        ref={containerRef}
-        className="flex-1 mb-5 overflow-y-scroll"
-      >
+      <div ref={containerRef} className="flex-1 mb-5 overflow-y-scroll">
         {messages.length === 0 && (
           <div className="h-full flex flex-col items-center justify-center gap-2 text-primary">
             <img
-              src={
-                theme === "dark"
-                  ? assets.logo_full
-                  : assets.logo_full_dark
-              }
+              src={theme === "dark" ? assets.logo_full : assets.logo_full_dark}
               alt=""
               className="w-full max-w-56 sm:max-w-68"
             />
@@ -137,9 +132,7 @@ const ChatBox = () => {
             type="checkbox"
             className="cursor-pointer"
             checked={isPublished}
-            onChange={(e) =>
-              setIsPublished(e.target.checked)
-            }
+            onChange={(e) => setIsPublished(e.target.checked)}
           />
         </label>
       )}
@@ -168,11 +161,7 @@ const ChatBox = () => {
 
         <button disabled={loading}>
           <img
-            src={
-              loading
-                ? assets.stop_icon
-                : assets.send_icon
-            }
+            src={loading ? assets.stop_icon : assets.send_icon}
             className="w-8 cursor-pointer"
             alt=""
           />
@@ -183,4 +172,3 @@ const ChatBox = () => {
 };
 
 export default ChatBox;
-  
